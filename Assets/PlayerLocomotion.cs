@@ -7,14 +7,16 @@ namespace SG
     public class PlayerLocomotion : MonoBehaviour
     {
 
-        Transform cameraObject;
-        InputHandler inputHandler;
-        Vector3 moveDirection;
+        Transform cameraObject;//储存主相机的位置
+        InputHandler inputHandler; //输入处理组件
+        Vector3 moveDirection;//移动向量
 
         [HideInInspector]
-        public Transform myTransform;
+        public Transform myTransform;//记录位置信息
+        [HideInInspector]
+        public AnimatorHandler animatorHandler;
 
-        public new Rigidbody rigibody;
+        public new Rigidbody rigidbody;
         public GameObject normalCamera;
         [Header("Stats")]
         [SerializeField]
@@ -24,10 +26,12 @@ namespace SG
 
         void Start()
         {
-            rigibody = GetComponent<Rigidbody>();
+            rigidbody = GetComponent<Rigidbody>();
             inputHandler = GetComponent<InputHandler>();
+            animatorHandler = GetComponentInChildren<AnimatorHandler>();
             cameraObject = Camera.main.transform;
             myTransform = transform;
+            animatorHandler.Initialize();
         }
 
         #region Movement
@@ -63,16 +67,24 @@ namespace SG
 
             inputHandler.TickInput(delta);
 
-            moveDirection=cameraObject.forward*inputHandler.vertical;
+            moveDirection = cameraObject.forward*inputHandler.vertical;
             moveDirection += cameraObject.right * inputHandler.horizontal;
             moveDirection.Normalize();
+            moveDirection.y= 0;
 
             float speed = movementSpeed;
             moveDirection *= speed;
 
             Vector3 projectedVelocity = Vector3.ProjectOnPlane(moveDirection, normalVector);
-            rigibody.velocity = projectedVelocity;
+            rigidbody.velocity = projectedVelocity;
 
+            animatorHandler.UpdateAnimatorValues(inputHandler.moveAmount, 0);
+            
+
+            if(animatorHandler.canRotate) 
+            {
+                HandleRotation(delta);
+            }
 
         }
         #endregion
